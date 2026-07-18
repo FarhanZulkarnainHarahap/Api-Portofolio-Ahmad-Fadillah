@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
-import { env, isProduction } from "../config/env.js";
+import { isProduction } from "../config/env.js";
 import { requireAuth } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -15,9 +15,8 @@ const router = Router();
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProduction || env.COOKIE_SECURE,
+  secure: isProduction,
   sameSite: "lax" as const,
-  domain: env.COOKIE_DOMAIN || undefined,
   path: "/",
 };
 

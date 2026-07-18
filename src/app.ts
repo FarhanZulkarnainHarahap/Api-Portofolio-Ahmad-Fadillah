@@ -1,15 +1,18 @@
 import express from "express";
-import helmet from "helmet";
+import * as helmetModule from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
-import rateLimit from "express-rate-limit";
+import * as rateLimitModule from "express-rate-limit";
 import { env } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
 import publicRoutes from "./routes/public.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
+
+const helmet = helmetModule.default;
+const rateLimit = rateLimitModule.rateLimit;
 
 export function createApp() {
   const app = express();

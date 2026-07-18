@@ -1,5 +1,4 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
 import { PublishStatus } from "../app/generated/prisma/client/index.js";
 import { prisma } from "../config/db.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -9,13 +8,6 @@ import { ApiError } from "../utils/api-error.js";
 import { contactSchema } from "../validators/public.validator.js";
 
 const router = Router();
-
-const contactLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 router.get(
   "/profile",
@@ -171,7 +163,6 @@ router.get(
 
 router.post(
   "/contact",
-  contactLimiter,
   validate(contactSchema),
   asyncHandler(async (req, res) => {
     if (req.body.website) throw new ApiError(400, "Invalid submission");

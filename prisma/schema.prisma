@@ -1,0 +1,659 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/app/generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+}
+
+enum WorkMode {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum ProjectStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  MAINTAINED
+}
+
+enum MediaType {
+  IMAGE
+  PDF
+  VIDEO
+  RAW
+}
+
+enum WidgetType {
+  KPI
+  BAR
+  LINE
+  PIE
+  AREA
+  TABLE
+}
+
+model Admin {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  role           Role            @default(ADMIN)
+  isActive       Boolean         @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  refreshTokens  RefreshToken[]
+  loginActivity  LoginActivity[]
+  activityLogs   ActivityLog[]
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  adminId      String
+  revokedAt    DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  admin        Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model LoginActivity {
+  id        String   @id @default(cuid())
+  adminId   String?
+  email     String
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  admin     Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+model Media {
+  id               String     @id @default(cuid())
+  secureUrl        String
+  publicId         String     @unique
+  resourceType     String
+  mediaType        MediaType
+  format           String?
+  width            Int?
+  height           Int?
+  bytes            Int?
+  originalFilename String?
+  metadata         Json?
+  folder           String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  @@index([mediaType])
+  @@index([createdAt])
+}
+
+model Profile {
+  id                 String       @id @default(cuid())
+  name               String
+  professionalTitle  String?
+  headline           String?
+  shortDescription   String?
+  about              String?
+  workPhilosophy     String?
+  professionalValues Json?
+  careerGoals        String?
+  specializations    Json?
+  languages          Json?
+  location           String?
+  publicEmail        String?
+  whatsapp           String?
+  linkedin           String?
+  availabilityStatus String?
+  profileImageId     String?
+  heroImageId        String?
+  cvMediaId          String?
+  metaTitle          String?
+  metaDescription    String?
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  icon      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model Statistic {
+  id        String   @id @default(cuid())
+  label     String
+  value     Decimal
+  unit      String?
+  icon      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model Education {
+  id          String   @id @default(cuid())
+  institution String
+  degree      String?
+  field       String?
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([sortOrder])
+}
+
+model Experience {
+  id               String                     @id @default(cuid())
+  companyName      String
+  companyLogoId    String?
+  position         String
+  employmentType   EmploymentType?
+  location         String?
+  workMode         WorkMode?
+  startDate        DateTime?
+  endDate          DateTime?
+  isCurrent        Boolean                    @default(false)
+  description      String?
+  tools            Json?
+  teamSize         Int?
+  employeeScope    Int?
+  sortOrder        Int                        @default(0)
+  isPublished      Boolean                    @default(false)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  deletedAt        DateTime?
+  responsibilities ExperienceResponsibility[]
+  achievements     ExperienceAchievement[]
+
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@index([createdAt])
+}
+
+model ExperienceResponsibility {
+  id           String     @id @default(cuid())
+  experienceId String
+  content      String
+  sortOrder    Int        @default(0)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId])
+  @@index([sortOrder])
+}
+
+model ExperienceAchievement {
+  id           String     @id @default(cuid())
+  experienceId String
+  content      String
+  sortOrder    Int        @default(0)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId])
+  @@index([sortOrder])
+}
+
+model ExpertiseCategory {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  sortOrder   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  expertise   Expertise[]
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model Expertise {
+  id          String             @id @default(cuid())
+  categoryId  String?
+  name        String
+  description String?
+  icon        String?
+  level       Int?
+  sortOrder   Int                @default(0)
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+  category    ExpertiseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model ProjectCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model Project {
+  id             String             @id @default(cuid())
+  categoryId     String?
+  title          String
+  slug           String             @unique
+  shortDescription String?
+  fullDescription String?
+  thumbnailId    String?
+  organization   String?
+  year           Int?
+  duration       String?
+  status         ProjectStatus?
+  role           String?
+  problem        String?
+  objectives     Json?
+  solution       String?
+  implementation String?
+  tools          Json?
+  resultsText    String?
+  lessons        String?
+  documentUrl    String?
+  isFeatured     Boolean            @default(false)
+  isPublished    Boolean            @default(false)
+  sortOrder      Int                @default(0)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+  category       ProjectCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images         ProjectImage[]
+  projectTools   ProjectTool[]
+  metrics        ProjectMetric[]
+  results        ProjectResult[]
+  challenges     ProjectChallenge[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@index([sortOrder])
+  @@index([createdAt])
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String
+  mediaId   String?
+  altText   String?
+  sortOrder Int      @default(0)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([sortOrder])
+}
+
+model ProjectTool {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectMetric {
+  id        String  @id @default(cuid())
+  projectId String
+  label     String
+  value     String
+  unit      String?
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectResult {
+  id        String  @id @default(cuid())
+  projectId String
+  content   String
+  sortOrder Int     @default(0)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectChallenge {
+  id        String  @id @default(cuid())
+  projectId String
+  content   String
+  sortOrder Int     @default(0)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  value       String?
+  unit        String?
+  year        Int?
+  category    String?
+  icon        String?
+  imageId     String?
+  isFeatured  Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([isPublished])
+  @@index([sortOrder])
+}
+
+model DocumentCategory {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique
+  sortOrder   Int                 @default(0)
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  documents   PortfolioDocument[]
+
+  @@index([slug])
+}
+
+model PortfolioDocument {
+  id             String            @id @default(cuid())
+  categoryId     String?
+  title          String
+  description    String?
+  thumbnailId    String?
+  fileMediaId    String?
+  fileSize       Int?
+  format         String?
+  year           Int?
+  previewEnabled Boolean           @default(true)
+  downloadEnabled Boolean          @default(false)
+  isPublished    Boolean           @default(false)
+  sortOrder      Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+  category       DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([isPublished])
+  @@index([sortOrder])
+}
+
+model Certification {
+  id              String   @id @default(cuid())
+  name            String
+  issuer          String?
+  issuedAt        DateTime?
+  expiresAt       DateTime?
+  neverExpires    Boolean  @default(false)
+  credentialId    String?
+  credentialUrl   String?
+  certificateId   String?
+  description     String?
+  relatedSkills   Json?
+  isFeatured      Boolean  @default(false)
+  isPublished     Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  @@index([isPublished])
+  @@index([sortOrder])
+}
+
+model Testimonial {
+  id                   String   @id @default(cuid())
+  name                 String
+  position             String?
+  company              String?
+  photoId              String?
+  professionalRelation String?
+  content              String
+  rating               Int?
+  isApproved           Boolean  @default(false)
+  isFeatured           Boolean  @default(false)
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  deletedAt            DateTime?
+
+  @@index([isApproved])
+  @@index([sortOrder])
+}
+
+model BlogCategory {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  posts       BlogPost[]
+
+  @@index([slug])
+}
+
+model BlogPost {
+  id             String        @id @default(cuid())
+  categoryId     String?
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  content        String?
+  coverImageId   String?
+  author         String?
+  status         PublishStatus @default(DRAFT)
+  publishedAt    DateTime?
+  readingTime    Int?
+  isFeatured     Boolean       @default(false)
+  seoTitle       String?
+  seoDescription String?
+  viewCount      Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  category       BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags           BlogPostTag[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model BlogTag {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  createdAt DateTime      @default(now())
+  posts     BlogPostTag[]
+
+  @@index([slug])
+}
+
+model BlogPostTag {
+  postId String
+  tagId  String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  subject   String
+  message   String
+  status    MessageStatus @default(NEW)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DashboardWidget {
+  id        String             @id @default(cuid())
+  title     String
+  period    String?
+  value     String?
+  unit      String?
+  widgetType WidgetType        @default(KPI)
+  labels    Json?
+  sortOrder Int                @default(0)
+  isActive  Boolean            @default(true)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  datasets  DashboardDataset[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model DashboardDataset {
+  id        String          @id @default(cuid())
+  widgetId  String
+  label     String
+  value     Decimal
+  color     String?
+  sortOrder Int             @default(0)
+  widget    DashboardWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+
+  @@index([widgetId])
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([isPublic])
+}
+
+model NavigationItem {
+  id        String   @id @default(cuid())
+  label     String
+  href      String
+  location  String   @default("header")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@index([isActive])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  adminId     String?
+  action      String
+  entity      String?
+  entityId    String?
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([entity])
+  @@index([createdAt])
+}

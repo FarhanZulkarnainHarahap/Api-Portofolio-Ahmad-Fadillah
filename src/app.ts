@@ -24,6 +24,7 @@ export function createApp() {
   app.use(cookieParser());
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 
+  app.get("/", (_req, res) => res.json({ success: true, message: "HR Portfolio API is running" }));
   app.get("/health", (_req, res) => res.json({ success: true, message: "API healthy" }));
   app.use("/api/v1/auth", authRoutes);
   app.use("/api/v1/public", publicRoutes);

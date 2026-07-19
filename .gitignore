@@ -5,3 +5,4 @@ src/app/generated/prisma/client
 .env.*
 !.env.example
 coverage
+.vercel

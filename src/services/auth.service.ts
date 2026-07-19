@@ -15,15 +15,19 @@ export async function loginAdmin(input: {
   const admin = await prisma.admin.findUnique({ where: { email: input.email } });
   const passwordValid = admin ? await bcrypt.compare(input.password, admin.passwordHash) : false;
 
-  await prisma.loginActivity.create({
-    data: {
-      adminId: admin?.id,
-      email: input.email,
-      success: Boolean(admin && passwordValid && admin.isActive),
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-    },
-  });
+  await prisma.loginActivity
+    .create({
+      data: {
+        adminId: admin?.id,
+        email: input.email,
+        success: Boolean(admin && passwordValid && admin.isActive),
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+      },
+    })
+    .catch((error) => {
+      console.error("Failed to record login activity", error);
+    });
 
   if (!admin || !passwordValid || !admin.isActive) {
     throw new ApiError(401, "Invalid email or password");

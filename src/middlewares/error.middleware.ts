@@ -12,6 +12,8 @@ export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) =>
     });
   }
 
+  console.error(error);
+
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     const message = error.code === "P2002" ? "Data already exists" : "Database request failed";
     return res.status(400).json({ success: false, message, errors: [{ code: error.code }] });

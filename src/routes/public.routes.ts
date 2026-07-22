@@ -193,9 +193,24 @@ function listPublished(modelName: "achievement" | "portfolioDocument" | "certifi
         ? await prisma.achievement.findMany(args)
         : modelName === "portfolioDocument"
           ? await prisma.portfolioDocument.findMany(args)
-          : await prisma.certification.findMany(args);
+          : await attachCertificationMedia(await prisma.certification.findMany(args));
     return sendSuccess(res, message, data);
   });
+}
+
+async function attachCertificationMedia<T extends { certificateId: string | null }>(items: T[]) {
+  const mediaIds = Array.from(new Set(items.map((item) => item.certificateId).filter((id): id is string => Boolean(id))));
+  if (!mediaIds.length) return items.map((item) => ({ ...item, certificate: null }));
+
+  const mediaItems = await prisma.media.findMany({
+    where: { id: { in: mediaIds }, deletedAt: null },
+  });
+  const mediaById = new Map(mediaItems.map((item) => [item.id, item]));
+
+  return items.map((item) => ({
+    ...item,
+    certificate: item.certificateId ? (mediaById.get(item.certificateId) ?? null) : null,
+  }));
 }
 
 export default router;

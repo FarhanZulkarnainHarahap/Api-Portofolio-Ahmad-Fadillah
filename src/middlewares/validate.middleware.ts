@@ -16,8 +16,9 @@ export function validate(schema: ZodSchema): RequestHandler {
 
     const data = parsed.data as { body?: unknown; params?: unknown; query?: unknown };
     req.body = data.body ?? req.body;
-    req.params = (data.params ?? req.params) as typeof req.params;
-    req.query = (data.query ?? req.query) as typeof req.query;
+    if (data.params && typeof data.params === "object") {
+      Object.assign(req.params, data.params);
+    }
     return next();
   };
 }
